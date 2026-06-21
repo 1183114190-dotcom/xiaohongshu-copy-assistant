@@ -1,0 +1,1085 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ff2442">
+  <title>小红书文案生成与分析助手</title>
+  <style>
+    :root {
+      --red: #ff2442;
+      --red-dark: #d91f38;
+      --red-soft: #fff0f2;
+      --pink: #ffe3e8;
+      --paper: #ffffff;
+      --bg: #fff7f8;
+      --text: #262626;
+      --muted: #747474;
+      --line: #f0d7dc;
+      --shadow: 0 18px 42px rgba(255, 36, 66, 0.12);
+      --radius: 22px;
+      --focus: 0 0 0 4px rgba(255, 36, 66, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+      background: var(--bg);
+    }
+
+    body {
+      min-height: 100%;
+      margin: 0;
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Microsoft YaHei", sans-serif;
+      background:
+        linear-gradient(180deg, #fff 0, #fff7f8 320px, #fff7f8 100%),
+        var(--bg);
+      letter-spacing: 0;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .page {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: 22px 16px 42px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+      gap: 18px;
+      align-items: stretch;
+      padding: 12px 0 18px;
+    }
+
+    .hero-main,
+    .hero-side,
+    .panel,
+    .result-card {
+      border: 1px solid rgba(255, 36, 66, 0.11);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-main {
+      padding: clamp(22px, 4vw, 38px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 48px;
+      height: 48px;
+      place-items: center;
+      border-radius: 16px;
+      color: #fff;
+      font-size: 24px;
+      font-weight: 900;
+      background: var(--red);
+      box-shadow: 0 12px 20px rgba(255, 36, 66, 0.2);
+    }
+
+    .brand-text {
+      min-width: 0;
+    }
+
+    .brand-label {
+      margin: 0 0 3px;
+      color: var(--red-dark);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 5.8vw, 54px);
+      line-height: 1.08;
+      font-weight: 900;
+    }
+
+    .lead {
+      width: min(100%, 650px);
+      margin: 18px 0 0;
+      color: #575757;
+      font-size: clamp(17px, 2.2vw, 21px);
+      line-height: 1.75;
+    }
+
+    .hero-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .tag-pill {
+      padding: 9px 13px;
+      border-radius: 999px;
+      background: var(--red-soft);
+      color: var(--red-dark);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .hero-side {
+      display: grid;
+      align-content: center;
+      gap: 14px;
+      padding: 22px;
+      background:
+        linear-gradient(135deg, #fff 0%, #fff4f5 100%);
+    }
+
+    .quick-stat {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 18px;
+      background: #fff;
+      border: 1px solid rgba(255, 36, 66, 0.1);
+    }
+
+    .stat-number {
+      flex: 0 0 auto;
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--red-soft);
+      color: var(--red);
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .quick-stat strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 17px;
+    }
+
+    .quick-stat span {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .tabs {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 6px 0 18px;
+      padding: 8px;
+      border: 1px solid rgba(255, 36, 66, 0.12);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 12px 28px rgba(255, 36, 66, 0.1);
+      backdrop-filter: blur(12px);
+    }
+
+    .tab-button {
+      min-height: 54px;
+      border: 0;
+      border-radius: 999px;
+      color: #5f5f5f;
+      background: transparent;
+      font-size: clamp(17px, 2vw, 20px);
+      font-weight: 900;
+      transition: 160ms ease;
+    }
+
+    .tab-button.active {
+      color: #fff;
+      background: var(--red);
+      box-shadow: 0 10px 20px rgba(255, 36, 66, 0.24);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 430px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .module {
+      display: none;
+    }
+
+    .module.active {
+      display: contents;
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .panel h2,
+    .results h2 {
+      margin: 0 0 6px;
+      font-size: clamp(22px, 3vw, 30px);
+      line-height: 1.25;
+    }
+
+    .sub {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 15px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      color: #3a3a3a;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .field small {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-height: 52px;
+      border: 2px solid #f1d8dd;
+      border-radius: 16px;
+      outline: 0;
+      background: #fff;
+      color: var(--text);
+      font-size: 17px;
+      line-height: 1.55;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    input,
+    select {
+      padding: 0 14px;
+    }
+
+    textarea {
+      min-height: 136px;
+      resize: vertical;
+      padding: 13px 14px;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--red);
+      box-shadow: var(--focus);
+      background: #fffdfd;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .primary-button,
+    .secondary-button,
+    .copy-button {
+      border: 0;
+      border-radius: 16px;
+      font-weight: 900;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .primary-button {
+      min-height: 60px;
+      margin-top: 4px;
+      color: #fff;
+      background: var(--red);
+      font-size: 20px;
+      box-shadow: 0 14px 22px rgba(255, 36, 66, 0.22);
+    }
+
+    .primary-button:hover,
+    .primary-button:focus-visible {
+      background: var(--red-dark);
+      box-shadow: 0 16px 26px rgba(255, 36, 66, 0.28);
+    }
+
+    .primary-button:active,
+    .secondary-button:active,
+    .copy-button:active {
+      transform: translateY(1px);
+    }
+
+    .secondary-button {
+      min-height: 48px;
+      padding: 0 16px;
+      color: var(--red-dark);
+      background: var(--red-soft);
+      font-size: 16px;
+    }
+
+    .results {
+      display: grid;
+      gap: 14px;
+    }
+
+    .result-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 2px;
+    }
+
+    .result-card {
+      padding: 18px;
+      box-shadow: 0 12px 30px rgba(255, 36, 66, 0.08);
+    }
+
+    .result-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .result-head h3 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.25;
+    }
+
+    .copy-button {
+      min-height: 38px;
+      flex: 0 0 auto;
+      padding: 0 12px;
+      color: var(--red-dark);
+      background: #fff1f3;
+      font-size: 14px;
+    }
+
+    .output-box {
+      min-height: 80px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #fffafa;
+      border: 1px dashed #f0b9c3;
+      color: #333;
+      font-size: 17px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .empty {
+      color: #8b8b8b;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .chip {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--red-soft);
+      color: var(--red-dark);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .score-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .score-item {
+      display: grid;
+      grid-template-columns: 112px 1fr 44px;
+      gap: 10px;
+      align-items: center;
+      color: #353535;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .bar {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #f5d5dc;
+    }
+
+    .bar span {
+      display: block;
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--red);
+      transition: width 260ms ease;
+    }
+
+    .notice {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #fff8e8;
+      color: #74552b;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 20;
+      display: none;
+      min-width: 180px;
+      transform: translateX(-50%);
+      padding: 13px 18px;
+      border-radius: 999px;
+      color: #fff;
+      background: rgba(38, 38, 38, 0.92);
+      text-align: center;
+      font-size: 16px;
+      font-weight: 900;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+    }
+
+    .toast.show {
+      display: block;
+      animation: toastIn 180ms ease both;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
+
+    @media (max-width: 860px) {
+      .hero,
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .module.active {
+        display: grid;
+        gap: 18px;
+      }
+
+      .hero-side {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        padding: 14px 12px 34px;
+      }
+
+      .hero-main,
+      .hero-side,
+      .panel,
+      .result-card {
+        border-radius: 18px;
+      }
+
+      .tabs {
+        border-radius: 22px;
+        grid-template-columns: 1fr;
+      }
+
+      .field-row,
+      .score-item {
+        grid-template-columns: 1fr;
+      }
+
+      .score-item {
+        gap: 7px;
+      }
+
+      .result-head,
+      .result-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .copy-button,
+      .secondary-button {
+        width: 100%;
+        min-height: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <section class="hero-main" aria-labelledby="appTitle">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">红</div>
+          <div class="brand-text">
+            <p class="brand-label">简单填写，马上出稿</p>
+          </div>
+        </div>
+        <h1 id="appTitle">小红书文案生成与分析助手</h1>
+        <p class="lead">给不懂提示词的普通用户使用。按表格填写信息，就能得到小红书标题、正文、封面关键词、话题标签，也可以分析已有文案哪里需要改。</p>
+        <div class="hero-tags" aria-label="功能特点">
+          <span class="tag-pill">大字清楚</span>
+          <span class="tag-pill">一键复制</span>
+          <span class="tag-pill">手机电脑都能用</span>
+          <span class="tag-pill">当前为模拟结果</span>
+        </div>
+      </section>
+
+      <aside class="hero-side" aria-label="使用步骤">
+        <div class="quick-stat">
+          <span class="stat-number">1</span>
+          <div>
+            <strong>选择功能</strong>
+            <span>生成新文案，或分析旧文案。</span>
+          </div>
+        </div>
+        <div class="quick-stat">
+          <span class="stat-number">2</span>
+          <div>
+            <strong>填写内容</strong>
+            <span>不用会提示词，照着问题填就行。</span>
+          </div>
+        </div>
+        <div class="quick-stat">
+          <span class="stat-number">3</span>
+          <div>
+            <strong>复制使用</strong>
+            <span>每个输出区域都支持一键复制。</span>
+          </div>
+        </div>
+      </aside>
+    </header>
+
+    <nav class="tabs" aria-label="主要功能">
+      <button class="tab-button active" type="button" data-tab="generate">文案生成</button>
+      <button class="tab-button" type="button" data-tab="analyze">文案分析</button>
+    </nav>
+
+    <main class="workspace">
+      <section class="module active" id="generateModule">
+        <form class="panel" id="generateForm">
+          <h2>生成小红书文案</h2>
+          <p class="sub">填得越具体，模拟结果越接近真实需求。后续接入 API 时，这些字段可以直接作为提示词信息。</p>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="productName">产品名称</label>
+              <input id="productName" name="productName" type="text" placeholder="例如：低糖黑芝麻丸" required>
+            </div>
+
+            <div class="field">
+              <label for="sellingPoints">产品卖点</label>
+              <textarea id="sellingPoints" name="sellingPoints" placeholder="例如：低糖、独立包装、早餐或下午茶都能吃、口感香" required></textarea>
+              <small>可以写 2 到 5 个卖点，用逗号隔开。</small>
+            </div>
+
+            <div class="field">
+              <label for="audience">目标人群</label>
+              <input id="audience" name="audience" type="text" placeholder="例如：上班族、宝妈、中老年人、控糖人群" required>
+            </div>
+
+            <div class="field">
+              <label for="scene">使用场景</label>
+              <input id="scene" name="scene" type="text" placeholder="例如：早餐、办公室加餐、送长辈、直播间种草" required>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="tone">语气风格</label>
+                <select id="tone" name="tone">
+                  <option value="真诚分享">真诚分享</option>
+                  <option value="亲切种草">亲切种草</option>
+                  <option value="专业讲解">专业讲解</option>
+                  <option value="轻松活泼">轻松活泼</option>
+                  <option value="长辈也看得懂">长辈也看得懂</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="length">文案长度</label>
+                <select id="length" name="length">
+                  <option value="短文案">短文案</option>
+                  <option value="中等长度" selected>中等长度</option>
+                  <option value="详细长文">详细长文</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="primary-button" type="submit">生成文案</button>
+          </div>
+        </form>
+
+        <section class="results" aria-label="生成结果">
+          <div class="result-toolbar">
+            <div>
+              <h2>生成结果</h2>
+              <p class="sub">先显示模拟 AI 结果，后续可替换为真实接口返回。</p>
+            </div>
+            <button class="secondary-button" type="button" data-copy-all="generate">复制全部结果</button>
+          </div>
+
+          <article class="result-card">
+            <div class="result-head">
+              <h3>3 个标题</h3>
+              <button class="copy-button" type="button" data-copy="titlesOutput">复制</button>
+            </div>
+            <div class="output-box empty" id="titlesOutput">填写左侧信息后，点击“生成文案”。</div>
+          </article>
+
+          <article class="result-card">
+            <div class="result-head">
+              <h3>小红书正文</h3>
+              <button class="copy-button" type="button" data-copy="bodyOutput">复制</button>
+            </div>
+            <div class="output-box empty" id="bodyOutput">这里会生成一篇适合发布的小红书正文。</div>
+          </article>
+
+          <article class="result-card">
+            <div class="result-head">
+              <h3>5 个封面关键词</h3>
+              <button class="copy-button" type="button" data-copy="coverOutput">复制</button>
+            </div>
+            <div class="chips" id="coverOutput" data-text=""> 
+              <span class="chip">等待生成</span>
+            </div>
+          </article>
+
+          <article class="result-card">
+            <div class="result-head">
+              <h3>10 个话题标签</h3>
+              <button class="copy-button" type="button" data-copy="tagsOutput">复制</button>
+            </div>
+            <div class="chips" id="tagsOutput" data-text="">
+              <span class="chip">等待生成</span>
+            </div>
+          </article>
+        </section>
+      </section>
+
+      <section class="module" id="analyzeModule">
+        <form class="panel" id="analyzeForm">
+          <h2>分析已有文案</h2>
+          <p class="sub">把已有小红书文案粘贴进来，系统会给出五项评分、修改建议和优化版本。</p>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="existingCopy">粘贴已有文案</label>
+              <textarea id="existingCopy" name="existingCopy" placeholder="请把标题和正文都粘贴到这里。" required></textarea>
+              <small>建议至少粘贴 80 个字，分析会更完整。</small>
+            </div>
+
+            <button class="primary-button" type="submit">开始分析</button>
+            <div class="notice">说明：当前是模拟 AI 分析结果。真实接入 API 后，可以在这里返回更精确的评分和建议。</div>
+          </div>
+        </form>
+
+        <section class="results" aria-label="分析结果">
+          <div class="result-toolbar">
+            <div>
+              <h2>分析结果</h2>
+              <p class="sub">评分越高，说明该项越适合小红书阅读和转化。</p>
+            </div>
+            <button class="secondary-button" type="button" data-copy-all="analyze">复制全部分析</button>
+          </div>
+
+          <article class="result-card">
+            <div class="result-head">
+              <h3>五项评分</h3>
+              <button class="copy-button" type="button" data-copy="scoreOutput">复制</button>
+            </div>
+            <div class="score-list" id="scoreOutput" data-text="还没有分析结果。">
+              <div class="output-box empty">粘贴文案后，点击“开始分析”。</div>
+            </div>
+          </article>
+
+          <article class="result-card">
+            <div class="result-head">
+              <h3>修改建议</h3>
+              <button class="copy-button" type="button" data-copy="adviceOutput">复制</button>
+            </div>
+            <div class="output-box empty" id="adviceOutput">这里会显示标题、开头、卖点和转化方面的建议。</div>
+          </article>
+
+          <article class="result-card">
+            <div class="result-head">
+              <h3>优化后的文案版本</h3>
+              <button class="copy-button" type="button" data-copy="optimizedOutput">复制</button>
+            </div>
+            <div class="output-box empty" id="optimizedOutput">这里会显示优化后的完整版本。</div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite">已复制</div>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab-button");
+    const modules = {
+      generate: document.getElementById("generateModule"),
+      analyze: document.getElementById("analyzeModule")
+    };
+
+    const outputIds = {
+      generate: ["titlesOutput", "bodyOutput", "coverOutput", "tagsOutput"],
+      analyze: ["scoreOutput", "adviceOutput", "optimizedOutput"]
+    };
+
+    function switchTab(name) {
+      tabs.forEach((button) => {
+        button.classList.toggle("active", button.dataset.tab === name);
+      });
+      Object.entries(modules).forEach(([key, module]) => {
+        module.classList.toggle("active", key === name);
+      });
+    }
+
+    function cleanListText(value) {
+      return value
+        .split(/[,，、\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    function getFormValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function setTextOutput(id, text) {
+      const element = document.getElementById(id);
+      element.textContent = text;
+      element.classList.remove("empty");
+      element.dataset.text = text;
+    }
+
+    function setChips(id, items) {
+      const element = document.getElementById(id);
+      element.innerHTML = "";
+      items.forEach((item) => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.textContent = item;
+        element.appendChild(chip);
+      });
+      element.dataset.text = items.join("、");
+    }
+
+    function getCopyText(id) {
+      const element = document.getElementById(id);
+      return element.dataset.text || element.textContent.trim();
+    }
+
+    async function copyText(text) {
+      if (!text || text.includes("等待生成") || text.includes("还没有分析结果")) {
+        showToast("还没有可复制的内容");
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        const helper = document.createElement("textarea");
+        helper.value = text;
+        helper.setAttribute("readonly", "");
+        helper.style.position = "fixed";
+        helper.style.left = "-9999px";
+        document.body.appendChild(helper);
+        helper.select();
+        document.execCommand("copy");
+        document.body.removeChild(helper);
+      }
+
+      showToast("已复制到剪贴板");
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 1700);
+    }
+
+    function buildGeneratedCopy(data) {
+      const points = cleanListText(data.sellingPoints);
+      const mainPoint = points[0] || "日常好用";
+      const secondPoint = points[1] || "方便省心";
+      const thirdPoint = points[2] || "值得试试";
+
+      const toneMap = {
+        "真诚分享": "像朋友聊天一样真诚",
+        "亲切种草": "亲切、自然、有种草感",
+        "专业讲解": "清楚、有条理、让人放心",
+        "轻松活泼": "轻松、有画面感、读起来不累",
+        "长辈也看得懂": "简单直白，不绕弯"
+      };
+
+      const lengthExtra = {
+        "短文案": "重点说清楚，不写太满。",
+        "中等长度": "把使用感、适合人群和购买理由讲完整。",
+        "详细长文": "加入更多细节、对比和使用建议，让读者更容易下决定。"
+      };
+
+      const titles = [
+        `用了${data.productName}才知道，${data.scene}真的可以轻松一点`,
+        `适合${data.audience}的${data.productName}，我会反复推荐`,
+        `${mainPoint}还${secondPoint}，这个${data.productName}有点会拿捏`
+      ];
+
+      const body = `最近想给大家分享一个我觉得很实用的东西：${data.productName}。\n\n我一开始关注它，是因为它比较适合${data.audience}，尤其是在${data.scene}的时候，用起来不会复杂，也不会让人有负担。\n\n它让我比较喜欢的几个点是：${points.join("、") || "使用方便、体验稳定、日常适合"}。其中我最想说的是${mainPoint}，这一点真的能解决很多人的小烦恼。再加上${secondPoint}，日常用起来会更顺手。\n\n如果你也在找一个${toneMap[data.tone]}的选择，可以先从${data.productName}试试看。${lengthExtra[data.length]}\n\n不是夸张推荐，是那种用过以后会觉得：原来这件小事也可以变简单。`;
+
+      const coverKeywords = [
+        `${data.productName}`,
+        `${mainPoint}`,
+        `${data.audience}适合`,
+        `${data.scene}好物`,
+        "真实分享"
+      ];
+
+      const tags = [
+        "#小红书好物",
+        `#${data.productName}`,
+        `#${data.scene}`,
+        `#${data.audience}`,
+        "#真实分享",
+        "#实用好物",
+        "#日常推荐",
+        "#好物种草",
+        `#${mainPoint}`,
+        "#生活小经验"
+      ].map((tag) => tag.replace(/\s+/g, ""));
+
+      return { titles, body, coverKeywords, tags };
+    }
+
+    async function requestGeneratedCopy(data) {
+      if (location.protocol === "file:") {
+        throw new Error("请通过本地服务打开页面，才能调用 DeepSeek。");
+      }
+
+      const response = await fetch("/api/generate-copy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "AI 生成失败。");
+      }
+
+      return result;
+    }
+
+    function analyzeCopy(text) {
+      const length = text.length;
+      const hasQuestion = /[?？]/.test(text);
+      const hasTags = /#/.test(text);
+      const hasAction = /(点击|领取|试试|收藏|下单|私信|评论|看看|建议)/.test(text);
+      const hasEmotion = /(喜欢|安心|舒服|开心|惊喜|治愈|放心|轻松|值得|真实)/.test(text);
+      const hasBenefit = /(解决|适合|好用|方便|省心|效果|优势|卖点|推荐)/.test(text);
+
+      const scores = {
+        "标题吸引力": Math.min(96, 62 + (hasQuestion ? 8 : 0) + (length > 120 ? 8 : 0) + (hasTags ? 4 : 0)),
+        "开头抓人程度": Math.min(95, 58 + (text.slice(0, 60).includes("我") ? 8 : 0) + (hasQuestion ? 8 : 0) + (hasEmotion ? 7 : 0)),
+        "卖点清晰度": Math.min(96, 56 + (hasBenefit ? 18 : 0) + (length > 180 ? 7 : 0)),
+        "情绪价值": Math.min(94, 55 + (hasEmotion ? 18 : 0) + (text.includes("你") ? 6 : 0)),
+        "转化引导": Math.min(92, 50 + (hasAction ? 22 : 0) + (hasTags ? 5 : 0))
+      };
+
+      const advice = [
+        "标题建议加入具体人群或具体场景，让读者一眼知道和自己有没有关系。",
+        "开头建议先写一个真实痛点，不要一上来就介绍产品。",
+        "卖点建议控制在 3 个以内，每个卖点后面补一句使用后的好处。",
+        "情绪价值可以再加强，多写“为什么让人省心、安心、轻松”。",
+        "结尾建议加一个温和行动引导，例如“先收藏，买之前再对照看”。"
+      ].join("\n");
+
+      const firstLine = text.split(/\n/).map((line) => line.trim()).find(Boolean) || "这篇文案";
+      const optimized = `标题：如果你也在纠结这个问题，可以先看看我的真实体验\n\n${firstLine.replace(/^标题[:：]?/, "")}\n\n我重新整理了一下这篇内容，建议先从读者最关心的问题说起：它到底适不适合我，能不能解决我的实际需求。\n\n正文可以这样写：\n\n我一开始也没有马上被种草，真正让我想试试的原因，是它刚好解决了日常里一个很小但很烦的问题。用下来以后，比较明显的感受有三点：第一，使用门槛不高；第二，场景很日常；第三，不需要花太多时间理解。\n\n如果你也是第一次了解，建议先看自己是不是有同样的需求，再决定要不要试。这样买起来更清楚，也不容易冲动消费。\n\n结尾可以加一句：有同样情况的朋友可以先收藏，之后需要的时候再回来对照看。`;
+
+      return { scores, advice, optimized };
+    }
+
+    async function requestCopyAnalysis(text) {
+      if (location.protocol === "file:") {
+        throw new Error("请通过本地服务打开页面，才能调用 DeepSeek。");
+      }
+
+      const response = await fetch("/api/analyze-copy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "AI 分析失败。");
+      }
+
+      return result;
+    }
+
+    function renderScores(scores) {
+      const element = document.getElementById("scoreOutput");
+      element.innerHTML = "";
+      const textLines = [];
+
+      Object.entries(scores).forEach(([name, score]) => {
+        const item = document.createElement("div");
+        item.className = "score-item";
+        item.innerHTML = `
+          <span>${name}</span>
+          <div class="bar" aria-hidden="true"><span style="width: ${score}%"></span></div>
+          <strong>${score}分</strong>
+        `;
+        element.appendChild(item);
+        textLines.push(`${name}：${score}分`);
+      });
+
+      element.dataset.text = textLines.join("\n");
+    }
+
+    function renderGeneratedResult(result) {
+      setTextOutput("titlesOutput", result.titles.map((title, index) => `${index + 1}. ${title}`).join("\n"));
+      setTextOutput("bodyOutput", result.body);
+      setChips("coverOutput", result.coverKeywords);
+      setChips("tagsOutput", result.tags);
+    }
+
+    document.getElementById("generateForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = event.submitter;
+      const data = {
+        productName: getFormValue("productName"),
+        sellingPoints: getFormValue("sellingPoints"),
+        audience: getFormValue("audience"),
+        scene: getFormValue("scene"),
+        tone: getFormValue("tone"),
+        length: getFormValue("length")
+      };
+
+      button.disabled = true;
+      button.textContent = "正在生成...";
+
+      try {
+        const result = await requestGeneratedCopy(data);
+        renderGeneratedResult(result);
+        showToast("AI 文案已生成");
+      } catch (error) {
+        renderGeneratedResult(buildGeneratedCopy(data));
+        showToast(`${error.message} 已显示模拟结果`);
+      } finally {
+        button.disabled = false;
+        button.textContent = "生成文案";
+      }
+    });
+
+    function renderAnalysisResult(result) {
+      renderScores(result.scores);
+      setTextOutput("adviceOutput", result.advice);
+      setTextOutput("optimizedOutput", result.optimized);
+    }
+
+    document.getElementById("analyzeForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = event.submitter;
+      const text = getFormValue("existingCopy");
+
+      button.disabled = true;
+      button.textContent = "正在分析...";
+
+      try {
+        const result = await requestCopyAnalysis(text);
+        renderAnalysisResult(result);
+        showToast("AI 分析已完成");
+      } catch (error) {
+        renderAnalysisResult(analyzeCopy(text));
+        showToast(`${error.message} 已显示模拟结果`);
+      } finally {
+        button.disabled = false;
+        button.textContent = "开始分析";
+      }
+    });
+
+    tabs.forEach((button) => {
+      button.addEventListener("click", () => switchTab(button.dataset.tab));
+    });
+
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", () => copyText(getCopyText(button.dataset.copy)));
+    });
+
+    document.querySelectorAll("[data-copy-all]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const ids = outputIds[button.dataset.copyAll];
+        const text = ids
+          .map((id) => getCopyText(id))
+          .filter(Boolean)
+          .join("\n\n");
+        copyText(text);
+      });
+    });
+  </script>
+</body>
+</html>
